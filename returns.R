@@ -17,8 +17,8 @@ compound.30.years <- function () {
     cat("\nInitial capital: ", initial)
     cat("\nMean return: ", mu)
     cat("\nStd Dev: ", sigma)
-    cat("\nValue Mean: ", mean(values))
-    cat("\nValue Std Dev: ", sd(values))
+    cat("\n30-Year Value Mean: ", mean(values))
+    cat("\n30-Year Value Std Dev: ", sd(values))
     cat("\n\n")
     
 }
