@@ -38,23 +38,24 @@ bonds.stocks <- function () {
     initial <- 1000
 
     sigma <- matrix(c(mu[1]^2, corr*prod(mu), corr*prod(mu), mu[2]^2), ncol=2)
+    sigma
 
-    stocksRet <- rep(1, N)
-    bondsRet <- rep(1, N)
+    stockReturns <- rep(1, N)
+    bondReturns <- rep(1, N)
 
     for (i in 1:30) {
         scenarios <- rmvnorm(N, mu, sigma)
-        stocksRet <- stocksRet*(1+scenarios[,1])
-        bondsRet <- bondsRet*(1+scenarios[,2])
+        stockReturns <- stockReturns*(1+scenarios[,1])
+        bondReturns <- bondReturns*(1+scenarios[,2])
     }
 
-    finalReturns <- initial*(weights*stocksRet + weights[2]*bondsRet)
+    finalReturns <- initial*(weights[1]*stockReturns + weights[2]*bondReturns)
 
-    hist(finalReturns, breaks=20, col="skyblue", xlab="30-Year Value", ylab="Counts", main="30-Year Compounding of Stocks and Bonds")
+    hist(finalReturns, breaks=20, col="skyblue", xlab="30-Year Value", ylab="Counts", main="Stocks and Bonds")
 
     cat("\nInitial amount: ", initial)
     cat("\nMean return: ", mu)
-    cat("\nStd Dev: ", sigma)
+    cat("\nCov Matrix: ", sigma)
     cat("\nWeights: ", weights)
     cat("\nFinal Mean: ", mean(finalReturns))
     cat("\nFinal Std Dev: ", sd(finalReturns))
