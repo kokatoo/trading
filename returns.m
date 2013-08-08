@@ -3,6 +3,7 @@ function returns()
     bondsStocks();
 end
 
+% 30-Year compounding
 function compound30Years()
     mu = .085;
     sigma = .15;
@@ -24,6 +25,7 @@ function compound30Years()
     fprintf('\n\n');
 end
 
+% Simulate joint distributions of stocks and bonds
 function bondsStocks()
     mu = [.085, .03];
     correlation = -.05;
