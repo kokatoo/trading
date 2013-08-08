@@ -11,14 +11,14 @@ compound.30.years <- function () {
     # 30 years returns
     rets <- matrix(rnorm(100*30, mu, sigma), ncol=30)
 
-    values <- initial * apply(1 + rets, 1, prod)
-    hist(values, breaks=20, col="skyblue", xlab="30-Year Value", ylab="Counts", main="30-Year Compounding")
+    finalReturns <- initial * apply(1 + rets, 1, prod)
+    hist(finalReturns, breaks=20, col="skyblue", xlab="30-Year Value", ylab="Counts", main="30-Year Compounding")
 
-    cat("\nInitial capital: ", initial)
+    cat("\nInitial amount: ", initial)
     cat("\nMean return: ", mu)
     cat("\nStd Dev: ", sigma)
-    cat("\n30-Year Value Mean: ", mean(values))
-    cat("\n30-Year Value Std Dev: ", sd(values))
+    cat("\nFinal Mean: ", mean(finalReturns))
+    cat("\nFinal Std Dev: ", sd(finalReturns))
     cat("\n\n")
 
 }
