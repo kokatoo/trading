@@ -80,6 +80,15 @@ plot(GMRets, FRets)
 
 #----
 
+##---- Log Price
+
+initial <- 10000
+r <- rnorm(253, mean=.05/253, sd=.25/sqrt(253))
+logPrice <- log(initial) + cumsum(r)
+plot(exp(logPrice))
+
+#----
+
 
 
 
