@@ -63,3 +63,23 @@ bonds.stocks <- function () {
 
 }
 bonds.stocks()
+
+#----
+
+##---- Correlation of Returns
+
+source("../R-examples/misc.R")
+
+GMPrices <- get.quotes("GM")$Close
+FPrices <- get.quotes("F")$Close
+n <- length(GMPrices)
+
+GMRets <- GMPrices[2:n]/GMPrices[1:(n-1)] - 1
+FRets <- FPrices[2:n]/FPrices[1:(n-1)] - 1
+plot(GMRets, FRets)
+
+#----
+
+
+
+
