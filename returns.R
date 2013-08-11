@@ -27,6 +27,7 @@ compound.30.years()
 #----
 
 ##---- Simulate joint distributions of stocks and bonds
+
 bonds.stocks <- function () {
 
     library(mvtnorm)
@@ -89,6 +90,50 @@ plot(exp(logPrice))
 
 #----
 
+##---- Stylized Facts about Market Returns
 
+mktRets <- function() {
+    # 1) time series mkt returns are generally not iid
+    # 2) mkt returns does not have constant volatility
+    # 3) the abs rets are highly correlated
+    # 4) the distribution is leptokurtic
+    # 5) exhibits volatility clustering
+    # 6) distribution skewed to the left
+
+    source("../R-examples/misc.R")
+    library("timeSeries")
+
+    GM <- get.quotes("GM")
+    GMPrices <- GM$Close
+    dates <- as.character(format(as.POSIXct(GM$Date[-1]), "%Y-%m-%d"))
+
+    n <- length(GMPrices)
+    GMRets <- GMPrices[2:n]/GMPrices[1:(n-1)] - 1
+    GMRets <- timeSeries(GMRets * 100, charvec=dates)
+    GMRetsAbs <- abs(GMRets)
+    colnames(GMRets) <- "GMRet"
+
+    # normal returns
+    dev.new()
+    par(mfrow=c(2, 2))
+    plot(GMRets, main="Daily Returns of GM", col="skyblue")
+    grid()
+    boxplot(GMRets, main="Box Plot of Returns", col="skyblue", cex=.5, pch=19)
+    acf(GMRets, main="ACF of Returns", col="skyblue", ci.col="red")
+    pacf(GMRets, main="PACF of Returns", col="skyblue", ci.col="red")
+
+    # abs returns
+    dev.new()
+    par(mfrow=c(2, 2))
+    acf(GMRetsAbs, main="ACF of Abs Returns", col="skyblue", ci.col="red")
+    pacf(GMRetsAbs, main="PACF of Abs Returns", col="skyblue", ci.col="red")
+    names(GMRets)
+    qqnorm(GMRets, main="QQ-Plot of Returns", col="skyblue", cex=.5, pch=19)
+    plot(GMRetsAbs, type="h", main="Volatility Clustering", col="skyblue")
+}
+
+mktRets()
+
+#----
 
 
