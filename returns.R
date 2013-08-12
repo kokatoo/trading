@@ -83,16 +83,39 @@ plot(GMRets, FRets)
 
 ##---- Log Price
 
-initial <- 10000
-r <- rnorm(253, mean=.05/253, sd=.25/sqrt(253))
-logPrice <- log(initial) + cumsum(r)
-plot(exp(logPrice))
+logPriceSimu <- function() {
+    # r(t) = log(1+R(t)) = log(P(t)/P(t-1) = p(t) - p(t-1)
+    initial <- 10000
+    r <- rnorm(253*2, mean=.05/253, sd=.25/sqrt(253))
+    logPrice <- log(initial) + cumsum(r)
+
+    par(mfrow=c(2, 1))
+    # price chart
+    plot(exp(logPrice), pch=19, cex=.5, col="skyblue")
+
+    # log normal distribution
+    hist(exp(r), col="skyblue")
+    par(mfrow=c(1,1))
+}
+logPriceSimu()
+
+logPriceYahoo <- function() {
+    source("../R-examples/misc.R")
+    spy <- get.quotes("SPY")$Close
+
+    logPrice <- log(spy)
+    n <- length(logPrice)
+    r <- logPrice[2:n] - logPrice[1:(n-1)]
+
+    hist(r, pch=19, col="skyblue")
+}
+logPriceYahoo()
 
 #----
 
 ##---- Stylized Facts about Market Returns
 
-mktRets <- function() {
+nmktRets <- function() {
     # 1) time series mkt returns are generally not iid
     # 2) mkt returns does not have constant volatility
     # 3) the abs rets are highly correlated
