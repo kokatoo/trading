@@ -83,27 +83,50 @@ plot(GMRets, FRets)
 
 ##---- Log Price
 
-logPriceSimu <- function() {
+logPriceRWSimu <- function() {
     # r(t) = log(1+R(t)) = log(P(t)/P(t-1) = p(t) - p(t-1)
     initial <- 10000
-    r <- rnorm(253*2, mean=.05/253, sd=.25/sqrt(253))
-    logPrice <- log(initial) + cumsum(r)
+    N <- 253*2
+    r <- rnorm(N, mean=.05/N, sd=.25/sqrt(N))
+    logPriceRW <- log(initial) + cumsum(r)
 
     par(mfrow=c(2, 1))
     # price chart
-    plot(exp(logPrice), pch=19, cex=.5, col="skyblue")
+    plot(exp(logPriceRW), pch=19, cex=.5, col="skyblue")
 
     # log normal distribution
-    hist(exp(r), col="skyblue")
+    hist(exp(r), col="skyblue", breaks=20, main="Log Normal Distribution")
     par(mfrow=c(1,1))
 }
-logPriceSimu()
+logPriceRWSimu()
+
+logPriceSimu <- function(numPeriods) {
+    initial <- 10000
+    N <- 100
+    r <- rnorm(N, mean=.5/N, sd=1/sqrt(N))
+
+    cumsumRates <- NULL
+    for(i in 1:5000) {
+        rates <- sample(r, numPeriods, replace=T)
+        cumsumRates <- rbind(cumsumRates, cumsum(rates[1:numPeriods]))
+    }
+
+    logPrice <- log(initial) + cumsumRates
+    par(mfrow=c(1,2))
+    hist(logPrice, breaks=20, cex.main=.7, col="skyblue",
+         main=paste("Log Price Distribution for", numPeriods, "Period(s)"))
+    hist(exp(logPrice), breaks=30, cex.main=.7, col="skyblue", xlab="Price",
+         main=paste("Price Distribution for", numPeriods, "Period(s)"))
+    par(mfrow=c(1,1))
+}
+logPriceSimu(10)
 
 logPriceYahoo <- function() {
     source("../R-examples/misc.R")
     spy <- get.quotes("SPY")$Close
 
     logPrice <- log(spy)
+
     n <- length(logPrice)
     r <- diff(logPrice)
 
