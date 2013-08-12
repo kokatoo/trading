@@ -105,7 +105,7 @@ logPriceYahoo <- function() {
 
     logPrice <- log(spy)
     n <- length(logPrice)
-    r <- logPrice[2:n] - logPrice[1:(n-1)]
+    r <- diff(logPrice)
 
     hist(r, pch=19, col="skyblue")
 }
