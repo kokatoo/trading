@@ -1,3 +1,5 @@
+##---- Portfolio Allocation Max Expectation
+
 portfolioAllocation <- function() {
 
     ## ExpectedReturns:
@@ -33,6 +35,37 @@ portfolioAllocation <- function() {
 
     cat("\nMax Objective Value:", as.integer(max.val))
     cat("\nx1:", as.integer(weights[1]))
+    cat("\nx2:", as.integer(weights[2]))
+    cat("\nx3:", as.integer(weights[3]))
+    cat("\nx4:", as.integer(weights[4]))
     cat("\n\n")
 }
 portfolioAllocation()
+
+portfolioAllocation2ndMethod <- function () {
+
+    library(lpSolve)
+
+    initial <- 10e6
+    constraints <- rbind(c(1, 0, 1, 0),
+                         c(4, 2, 2, 1),
+                         c(1, 0, 0, 0),
+                         c(0, 1, 0, 0),
+                         c(0, 0, 1, 0),
+                         c(0, 0, 0, 1),
+                         c(1, 1, 1, 1))
+    lp <- lp(objective.in=-1*c(.25, .055, .033, .025),
+             const.mat=constraints,
+             const.rhs=initial*c(.5, 2, .4, .4, .4, .4, 1),
+             const.dir=c(rep("<=", 6), "="))
+
+    cat("\nMax Objective Value:", as.integer(-lp$objval))
+    for(i in 1:4) {
+        cat("\nx", i, ":", as.integer(lp$solution[i]))
+    }
+    cat("\n\n")
+
+}
+portfolioAllocation2ndMethod()
+
+#----
