@@ -1,5 +1,6 @@
-##---- Portfolio Allocation Max Expectation
+##---- Portfolio Allocation
 
+# max portfolio expectation given constraints
 portfolioAllocation <- function() {
 
     ## ExpectedReturns:
@@ -42,6 +43,7 @@ portfolioAllocation <- function() {
 }
 portfolioAllocation()
 
+# 2nd method of maximizing expectation
 portfolioAllocation2ndMethod <- function () {
 
     library(lpSolve)
@@ -67,5 +69,33 @@ portfolioAllocation2ndMethod <- function () {
 
 }
 portfolioAllocation2ndMethod()
+
+# Quadratic Programming, maximizing expected return and minimizing risk
+portfolioRisk <- function() {
+    ## invest in 3 stocks with expected returns .03, .05, .06
+    ## constraints that the weights add up to 1
+    ## and cov:
+    ## [.01, .02, .02]
+    ## [.02, .01, .02]
+    ## [.02, .02, .01]
+    ## k = 2
+    ## max t(x)*beta - k/2 * t(beta) * Cov * beta
+
+    library(quadprog)
+    A <- rbind(rep(1, 3), diag(3))
+    A <- t(A)
+
+    x <- c(.005, .0075, .02)
+    b <- c(1, 0, 0, 0)
+    Cov <- matrix(c(0.01, 0.003, 0.003, 0.003, 0.01, 0.003, 0.003, 0.003, 0.01), nrow=3)
+
+    result <- solve.QP(2 * Cov, x, A, b, meq=1)
+    cat("\nMax Objective Value:", -result$value)
+    for(i in 1 : 3) {
+        cat("\nx", i, ":", result$solution[i])
+    }
+    cat("\n\n")
+}
+portfolioRisk()
 
 #----
