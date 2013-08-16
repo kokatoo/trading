@@ -99,3 +99,35 @@ portfolioRisk <- function() {
 portfolioRisk()
 
 #----
+
+##---- Cashflow
+
+cashflow <- function() {
+
+    ## Cashflow from bonds to meet requirements
+    ## Cash requirement is found in vector b
+    ## A contains the cashflow from 5 bonds
+
+    library(lpSolve)
+    numBonds <- 5
+    prices <- c(104.76, 113.23, 83.29, 192.65, 87.78)
+
+    A <- -1*matrix(cbind(c(1.5, 3, 3, 5, 3.5),
+                         c(1.5, 3, 3, 5, 3.5),
+                         c(1.5, 3, 3, 5, 3.5),
+                         c(1.5, 3, 3, 5, 3.5),
+                         c(101.5, 3, 5, 5, 3.5),
+                         c(0, 103, 3, 5, 3.5),
+                         c(0, 0, 103, 5, 3.5),
+                         c(0, 0, 0, 105, 103.5)), byrow=T, ncol=5)
+    b <- -1*c(1e4, 2e4, 1e4, 2e4, 5e4, 7e4, 3e4, 15e4)
+
+    # constraint to integer solutions
+    cashflow.lp <- lp(objective.in=prices, const.mat=A, const.rhs=b, const.dir=rep("<=", 8),
+                int.vec=1:5)
+    cashflow.lp$solution
+
+}
+cashflow()
+
+#----
