@@ -131,3 +131,28 @@ cashflow <- function() {
 cashflow()
 
 #----
+
+##---- Capital Budgeting
+
+capitalBudgeting <- function() {
+
+    ## cashflows contain the cashflows from the projects
+    numProjects=8
+    cashflows <- -1*c(50, 85, 43, 25, 94, 34, 840, 80)
+
+    A <- matrix(cbind(c(30, 20, 20, 10, 40, 20, 20, 15),
+                      # x3-x4 <= 0
+                      # if you invest in 3 you invest in 4
+                      c(0, 0, 1, -1, 0, 0, 0, 0),
+                      # x2+x4 <=1
+                      # either invest in 2 or 4
+                      c(0, 1, 0, 1, 0, 0, 0, 0)), nrow=3, byrow=T)
+    b <- c(100, 0, 1)
+
+    capitalBudgeting.lp <- lp(objective.in=cashflows, const.mat=A, const.rhs=b, const.dir=c("<="),
+                              binary.vec=1:numProjects)
+    capitalBudgeting.lp$solution
+}
+capitalBudgeting()
+
+#----
