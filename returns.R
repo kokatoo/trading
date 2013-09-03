@@ -68,16 +68,48 @@ bonds.stocks()
 #----
 
 ##---- Correlation of Returns
+corr.ret <- function() {
+    source("../R-examples/misc.R")
 
-source("../R-examples/misc.R")
+    GM.prices <- get.quotes("GM")$Close
+    F.prices <- get.quotes("F")$Close
+    n <- length(GM.prices)
 
-GMPrices <- get.quotes("GM")$Close
-FPrices <- get.quotes("F")$Close
-n <- length(GMPrices)
+    GM.ret <- GM.prices[2:n]/GM.prices[1:(n-1)] - 1
+    F.ret <- F.prices[2:n]/F.prices[1:(n-1)] - 1
+    plot(GM.ret, F.ret)
 
-GMRets <- GMPrices[2:n]/GMPrices[1:(n-1)] - 1
-FRets <- FPrices[2:n]/FPrices[1:(n-1)] - 1
-plot(GMRets, FRets)
+    data <- data.frame(GM.ret, F.ret)
+
+    # plot overlapping histograms
+    library(reshape2)
+    data.melt <- melt(data)
+    ggplot(data.melt, aes(value, fill=variable)) + geom_histogram(alpha=.2)
+
+    # plot scatterplots as ellipses
+    corrs <- cor(data)
+    op <- par(mfrow=c(1,2))
+    plotcorr(corrs, col="skyblue")
+    plotcorr(corrs, numbers=T)
+    par(op)
+
+    # plot as pairs
+    panel.corr <- function(x, y, digits=2, prefix="", cex.cor, ...) {
+        par(usr = c(0, 1, 0, 1))
+        r <- cor(x, y)
+        txt <- format(r, digits=digits)[1]
+        txt <- paste(prefix, txt, sep="")
+
+        text(0.5, 0.5, txt)
+    }
+    pairs(data, lower.panel=panel.smooth, upper.panel=panel.corr)
+
+    # plot rolling correlations
+    library(zoo)
+    data.zoo <- zoo(data)
+    GM.F <- rollapply(z, 30, function(x) cor(x[,1], x[,2]), by.column=F)
+    plot(GM.F)
+}
 
 #----
 
@@ -150,32 +182,32 @@ nmktRets <- function() {
     library("timeSeries")
 
     GM <- get.quotes("GM")
-    GMPrices <- GM$Close
+    GM.prices <- GM$Close
     dates <- as.character(format(as.POSIXct(GM$Date[-1]), "%Y-%m-%d"))
 
-    n <- length(GMPrices)
-    GMRets <- GMPrices[2:n]/GMPrices[1:(n-1)] - 1
-    GMRets <- timeSeries(GMRets * 100, charvec=dates)
-    GMRetsAbs <- abs(GMRets)
-    colnames(GMRets) <- "GMRet"
+    n <- length(GM.prices)
+    GM.ret <- GM.prices[2:n]/GM.prices[1:(n-1)] - 1
+    GM.ret <- timeSeries(GM.ret * 100, charvec=dates)
+    GM.ret.abs <- abs(GM.ret)
+    colnames(GM.ret) <- "GMRet"
 
     # normal returns
     dev.new()
     par(mfrow=c(2, 2))
-    plot(GMRets, main="Daily Returns of GM", col="skyblue")
+    plot(GM.ret, main="Daily Returns of GM", col="skyblue")
     grid()
-    boxplot(GMRets, main="Box Plot of Returns", col="skyblue", cex=.5, pch=19)
-    acf(GMRets, main="ACF of Returns", col="skyblue", ci.col="red")
-    pacf(GMRets, main="PACF of Returns", col="skyblue", ci.col="red")
+    boxplot(GM.ret, main="Box Plot of Returns", col="skyblue", cex=.5, pch=19)
+    acf(GM.ret, main="ACF of Returns", col="skyblue", ci.col="red")
+    pacf(GM.ret, main="PACF of Returns", col="skyblue", ci.col="red")
 
     # abs returns
     dev.new()
     par(mfrow=c(2, 2))
-    acf(GMRetsAbs, main="ACF of Abs Returns", col="skyblue", ci.col="red")
-    pacf(GMRetsAbs, main="PACF of Abs Returns", col="skyblue", ci.col="red")
-    names(GMRets)
-    qqnorm(GMRets, main="QQ-Plot of Returns", col="skyblue", cex=.5, pch=19)
-    plot(GMRetsAbs, type="h", main="Volatility Clustering", col="skyblue")
+    acf(GM.ret.abs, main="ACF of Abs Returns", col="skyblue", ci.col="red")
+    pacf(GM.ret.abs, main="PACF of Abs Returns", col="skyblue", ci.col="red")
+    names(GM.ret)
+    qqnorm(GM.ret, main="QQ-Plot of Returns", col="skyblue", cex=.5, pch=19)
+    plot(GM.ret.abs, type="h", main="Volatility Clustering", col="skyblue")
 }
 
 mktRets()
