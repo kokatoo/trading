@@ -1,0 +1,6 @@
+#+STARTUP: showeverything
+#+title: Research
+
+
+
+
