@@ -1,6 +1,26 @@
 #+STARTUP: showeverything
 #+title: Research
 
+* SPY
 
+** Returns By Day of Week
 
+#+begin_src R
+  myfile <- "./data/spy_prices.rds"
+  prices <- readRDS(myfile)
 
+  log_rets <- diff(log(prices), lag=1)
+  log_rets <- log_rets[-1]
+
+  dayofweeks <- sapply(log_rets, .indexwday)  
+
+  log_rets <- cbind(log_rets, dayofweeks)
+  log_rets <- as.data.frame(log_rets)
+
+  names(log_rets) <- c("return",  "dayofweek")
+
+  boxplot(return ~ dayofweek, data=log_rets,
+          horizontal=TRUE, names=c("Mon", "Tues", "Wed", "Thurs", "Fri"))
+#+end_src
+
+[[./images/spy_dayofweek_boxplot.png]]
