@@ -1,5 +1,4 @@
 #+STARTUP: showeverything
-#+title: Research
 
 * SPY
 
