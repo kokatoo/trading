@@ -100,7 +100,6 @@ aggregate_month <- function(symbol, log_rets) {
 mybarplots <- function(symbol, log_rets) {
 
   log_rets_summary <- aggregate_month(symbol, log_rets)
-  #log_rets_summary <- as.data.frame(log_rets_summary)
 
   log_rets_summary <- cbind(log_rets_summary, month = as.numeric(row.names(log_rets_summary)))
   log_rets_summary <- log_rets_summary[order(log_rets_summary$month), ]
@@ -115,13 +114,19 @@ mybarplots <- function(symbol, log_rets) {
       log_rets_summary[, col] * 100,
       names.arg = month.abb,
       ylab = paste(col, "Returns (%)"),
+      yaxt = "n",
       main = paste0(symbol, " Annual '", col, "' Returns"),
       sub = paste(
           index(first(log_rets)),
           "to",
           index(last(log_rets))
         )
-      )
+    )
+    axis(
+      side = 2,
+      at = axTicks(2),
+      labels = formatC(axTicks(2), format = "d", big.mark = ",")
+    )
   }
 
   par(opar)
@@ -141,43 +146,75 @@ dev.off()
 
 mygroupbarplots <- function(col, log_rets) {
 
-  data <- aggregate_month("SPY", log_rets)
+  symbols <- c("SPY", "EEM", "IWM")
+  data <- aggregate_month(symbols[1], log_rets)
   month <- as.numeric(row.names(data))
 
   data <- cbind(
     SPY = data[, col],
-    EEM = aggregate_month("EEM", log_rets)[, col],
-    IWM = aggregate_month("IWM", log_rets)[, col]
+    EEM = aggregate_month(symbols[2], log_rets)[, col],
+    IWM = aggregate_month(symbols[3], log_rets)[, col]
   )
 
-  data <- cbind(data, month = month)
-  data <- data[order(data[, "month"]), ]
-
-  data <- data[, 1:3]
+  data <- data[order(month), ]
   data <- t(data)
 
   library(RColorBrewer)
+  library(gplots)
 
-  barplot(data * 100,
+  if (col == "Mean") {
+    sds <- as.data.frame(
+      aggregate(log_rets[, symbols],
+        by = list(log_rets$month),
+        FUN = sd
+      )
+    )
+    sds <- sds[order(as.numeric(row.names(sds))), ]
+    sds <- t(sds)
+  } else {
+    sds <- matrix(0, nrow = nrow(data), ncol = ncol(data))
+  }
+
+  barplot2(data * 100,
     col = brewer.pal(3, "Set1"),
     beside = TRUE,
     legend = rownames(data),
     names.arg = month.abb,
+    yaxt = "n",
     ylab = paste("Median Returns (%)"),
     main = paste0("Annual '", col, "' Returns"),
     sub = paste(
       index(first(log_rets)),
       "to",
       index(last(log_rets))
+    ),
+    plot.ci = TRUE,
+    ci.l = (data - 1.96 * sds) * 100,
+    ci.u = (data + 1.96 * sds) * 100
     )
-  )
+
+  axis(side = 2,
+       at = axTicks(2),
+       labels = formatC(axTicks(2), format = "d", big.mark = ","))
 }
 
+
+png(file = "./images/plot7.png", width = 1000)
 par(mfrow = c(2, 2))
 mygroupbarplots("Min.", log_rets)
 mygroupbarplots("Max.", log_rets)
 mygroupbarplots("Median", log_rets)
 mygroupbarplots("Mean", log_rets)
+dev.off()
 
 
 par(opar)
+
+
+
+
+
+
+sds <- sds[order(sds$month),]
+barplot2(t(sds$sd))
+t(sds$sd)

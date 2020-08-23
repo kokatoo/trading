@@ -72,3 +72,4 @@ myplot("IWM", data.IWM
 [[./images/plot6.png]]
 
 
+[[./images/plot7.png]]
