@@ -2,24 +2,73 @@
 
 * SPY
 
-** Returns By Day of Week
+** Getting Data
 
 #+begin_src R
-  myfile <- "./data/spy_prices.rds"
-  prices <- readRDS(myfile)
+getSymbols(Symbols = "SPY", src = "yahoo")
 
-  log_rets <- diff(log(prices), lag=1)
-  log_rets <- log_rets[-1]
+data.SPY <- SPY
+saveRDS(data.SPY, file = "./data/spy.rds")
 
-  dayofweeks <- sapply(log_rets, .indexwday)  
-
-  log_rets <- cbind(log_rets, dayofweeks)
-  log_rets <- as.data.frame(log_rets)
-
-  names(log_rets) <- c("return",  "dayofweek")
-
-  boxplot(return ~ dayofweek, data=log_rets,
-          horizontal=TRUE, names=c("Mon", "Tues", "Wed", "Thurs", "Fri"))
+> summary(data.SPY)
+     Index               SPY.Open         SPY.High        SPY.Low     
+ Min.   :2007-01-03   Min.   : 67.95   Min.   : 70.0   Min.   : 67.1  
+ 1st Qu.:2010-06-01   1st Qu.:131.79   1st Qu.:132.7   1st Qu.:131.0  
+ Median :2013-10-25   Median :174.91   Median :175.8   Median :174.1  
+ Mean   :2013-10-26   Mean   :184.89   Mean   :185.9   Mean   :183.7  
+ 3rd Qu.:2017-03-24   3rd Qu.:235.73   3rd Qu.:236.7   3rd Qu.:234.5  
+ Max.   :2020-08-20   Max.   :339.05   Max.   :339.6   Max.   :337.5  
+   SPY.Close        SPY.Volume         SPY.Adjusted   
+ Min.   : 68.11   Min.   : 20270000   Min.   : 53.95  
+ 1st Qu.:131.86   1st Qu.: 79695000   1st Qu.:106.91  
+ Median :175.15   Median :121911000   Median :153.26  
+ Mean   :184.91   Mean   :150092428   Mean   :166.23  
+ 3rd Qu.:235.54   3rd Qu.:188239600   3rd Qu.:221.16  
+ Max.   :338.64   Max.   :871026300   Max.   :338.64
 #+end_src
 
-[[./images/spy_dayofweek_boxplot.png]]
+** Cleaning
+
+#+begin_src R
+clean_data <- function(data) {
+
+  header  <- names(data)
+
+  colnames(data) <- sapply(strsplit(header, ".", fixed = TRUE), "[", 2)
+
+  return(data)
+}
+
+data.SPY <- clean_data(SPY)
+data.EEM <- clean_data(EEM)
+data.IWM <- clean_data(IWM)
+#+end_src
+
+** Exploratory Plot
+
+#+begin_src R
+layout(matrix(c(1, 1, 2, 3), 2, 2, byrow = TRUE))
+myplot("SPY", data.SPY)
+myplot("EEM", data.EEM)
+myplot("IWM", data.IWM
+#+end_src
+
+[[./images/plot1.png]]
+
+[[./images/plot2.png]]
+
+[[./images/plot2.png]]
+
+*** In 1 plot
+
+[[./images/plot3.png]]
+
+*** BarPlots
+
+[[./images/plot4.png]]
+
+[[./images/plot5.png]]
+
+[[./images/plot6.png]]
+
+
