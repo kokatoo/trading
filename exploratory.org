@@ -164,13 +164,15 @@ subs <- paste(
 #+begin_src R
 summary_plot <- function(symbol, summary_rets, col, subs) {
   header <- c("Min.", "Max.", "Median", "Mean")
-  data <- data.frame(Month = summary_rets$Month, summary_rets[, symbol])
+  agg_col_name <- names(summary_rets)[1]
 
   par(mfrow = c(2, 2))
   par(oma = c(oma = c(1, 1, 2, 1)))
   for (col_name in header) {
+    data <- matrix(summary_rets[, symbol][, col_name], nrow = 1) * 100
+    colnames(data) <- summary_rets[, agg_col_name]
     barplot(
-      data[, col_name] * 100,
+      data,
       ylab = paste(col_name, "Returns (%)"),
       yaxt = "n",
       col = col,
@@ -213,17 +215,20 @@ summary_grp_plot <- function(summary_rets, summary_sds, symbols, colors, subs) {
 
   header <- c("Min.", "Max.", "Median", "Mean")
 
+  agg_col_name <- names(summary_rets)[1]
+
   par(mfrow = c(2, 2))
   par(oma = c(oma = c(2, 1, 2, 1)))
 
   for (col_name in header) {
     data <- sapply(symbols, function(symbol) {
-      summary_rets[, symbol][, col_name] * 100
+      matrix(summary_rets[, symbol][, col_name], nrow = 1) * 100
     })
+    rownames(data) <- summary_rets[, agg_col_name]
     data <- t(data)
 
     if (col_name == "Mean") {
-      sds <- summary_sds[, symbol]
+      sds <- t(summary_sds[symbols])
     } else {
       sds <- matrix(0, nrow = nrow(data), ncol = ncol(data))
     }
@@ -232,8 +237,6 @@ summary_grp_plot <- function(summary_rets, summary_sds, symbols, colors, subs) {
       data,
       col = colors,
       beside = TRUE,
-      legend = symbols,
-      names.arg = month.abb,
       yaxt = "n",
       ylab = paste(col_name, "Returns (%)"),
       main = col_name,
@@ -241,6 +244,8 @@ summary_grp_plot <- function(summary_rets, summary_sds, symbols, colors, subs) {
       ci.l = (data - 1.96 * sds),
       ci.u = (data + 1.96 * sds)
     )
+
+    legend("topleft", legend = symbols, fill = colors)
 
     axis(
       side = 2,
@@ -267,6 +272,17 @@ summary_grp_plot(summary_rets, summary_sds, symbols, colors, subs)
 #+end_src
 
 [[./images/plot7.png]]
+
+*** By Day of Week
+
+[[./images/plot13.png]]
+
+[[./images/plot14.png]]
+
+[[./images/plot15.png]]
+
+[[./images/plot16.png]]
+
 
 ** Histograms
 

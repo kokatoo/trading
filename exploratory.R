@@ -50,13 +50,15 @@ price_plot <- function(symbol, data, col = "black") {
 
 summary_plot <- function(symbol, summary_rets, col, subs) {
   header <- c("Min.", "Max.", "Median", "Mean")
-  data <- data.frame(Month = summary_rets$Month, summary_rets[, symbol])
+  agg_col_name <- names(summary_rets)[1]
 
   par(mfrow = c(2, 2))
   par(oma = c(oma = c(1, 1, 2, 1)))
   for (col_name in header) {
+    data <- matrix(summary_rets[, symbol][, col_name], nrow = 1) * 100
+    colnames(data) <- summary_rets[, agg_col_name]
     barplot(
-      data[, col_name] * 100,
+      data,
       ylab = paste(col_name, "Returns (%)"),
       yaxt = "n",
       col = col,
@@ -85,17 +87,20 @@ summary_grp_plot <- function(summary_rets, summary_sds, symbols, colors, subs) {
 
   header <- c("Min.", "Max.", "Median", "Mean")
 
+  agg_col_name <- names(summary_rets)[1]
+
   par(mfrow = c(2, 2))
   par(oma = c(oma = c(2, 1, 2, 1)))
 
   for (col_name in header) {
     data <- sapply(symbols, function(symbol) {
-      summary_rets[, symbol][, col_name] * 100
+      matrix(summary_rets[, symbol][, col_name], nrow = 1) * 100
     })
+    rownames(data) <- summary_rets[, agg_col_name]
     data <- t(data)
 
     if (col_name == "Mean") {
-      sds <- summary_sds[, symbol]
+      sds <- t(summary_sds[symbols])
     } else {
       sds <- matrix(0, nrow = nrow(data), ncol = ncol(data))
     }
@@ -104,8 +109,6 @@ summary_grp_plot <- function(summary_rets, summary_sds, symbols, colors, subs) {
       data,
       col = colors,
       beside = TRUE,
-      legend = symbols,
-      names.arg = month.abb,
       yaxt = "n",
       ylab = paste(col_name, "Returns (%)"),
       main = col_name,
@@ -113,6 +116,8 @@ summary_grp_plot <- function(summary_rets, summary_sds, symbols, colors, subs) {
       ci.l = (data - 1.96 * sds),
       ci.u = (data + 1.96 * sds)
     )
+
+    legend("topleft", legend = symbols, fill = colors)
 
     axis(
       side = 2,
@@ -177,8 +182,12 @@ months <- month(log_rets, label = TRUE, abbr = TRUE)
 log_rets <- as.data.frame(log_rets)
 log_rets$Month <- months
 
+log_rets$WDay <- wday(as.Date(row.names(log_rets)), label = TRUE)
+
 head(log_rets)
 str(log_rets)
+
+saveRDS(log_rets, file = "./data/log-rets.rds")
 
 ## --- Plot all datapoints
 png(file = "./images/plot1.png", width = 1000)
@@ -330,4 +339,40 @@ vioplot(data.melt$ret[data.melt$symbol == "SPY"],
   col = colors
   )
 title("Returns", ylab = "Return")
+dev.off()
+
+## --- Day of Week
+col_name <- "DayOfWeek"
+summary_rets <- aggregate(
+  log_rets[symbols] * 252,
+  by = list(log_rets$WDay),
+  FUN = summary
+)
+names(summary_rets)[1] <- col_name
+
+summary_sds <- aggregate(
+  log_rets[symbols] * 252,
+  by = list(log_rets$WDay),
+  FUN = sd
+)
+names(summary_sds)[1] <- col_name
+
+subs <- paste(
+  row.names(first(log_rets)),
+  "/",
+  row.names(last(log_rets))
+)
+
+png(file = "./images/plot13.png", width = 1000)
+summary_plot("SPY", summary_rets, colors[1], subs)
+dev.off()
+png(file = "./images/plot14.png", width = 1000)
+summary_plot("EEM", summary_rets, colors[2], subs)
+dev.off()
+png(file = "./images/plot15.png", width = 1000)
+summary_plot("IWM", summary_rets, colors[3], subs)
+dev.off()
+
+png(file = "./images/plot16.png", width = 1000)
+summary_grp_plot(summary_rets, summary_sds, symbols, colors, subs)
 dev.off()
