@@ -73,3 +73,17 @@ myplot("IWM", data.IWM
 
 
 [[./images/plot7.png]]
+
+** Histograms
+
+[[./images/plot8.png]]
+
+** KDE
+
+[[./images/plot9.png]]
+
+[[./images/plot10.png]]
+
+[[./images/plot11.png]]
+
+[[./images/plot12.png]]

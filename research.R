@@ -1,4 +1,10 @@
 library(quantmod)
+library(RColorBrewer)
+library(gplots)
+library(lubridate)
+library(sm)
+library(reshape2)
+library(vioplot)
 
 ##---- SPY
 getSymbols.yahoo(
@@ -43,6 +49,8 @@ saveRDS(data.EEM, file = "./data/eem.rds")
 saveRDS(data.IWM, file = "./data/iwm.rds")
 
 data.SPY <- readRDS("./data/spy.rds")
+data.EEM <- readRDS("./data/eem.rds")
+data.IWM <- readRDS("./data/iwm.rds")
 
 ## --- Plot all series
 png(file = "./images/plot1.png", width = 1000)
@@ -52,7 +60,7 @@ myplot("EEM", data.EEM)
 myplot("IWM", data.IWM)
 dev.off()
 
-## --- Plot matched dates
+## --- Plot series with common dates
 first_date <- as.Date(max(sapply(list(data.SPY, data.EEM, data.IWM), function(x) index(first(x)))))
 
 data.SPY <- data.SPY[index(data.SPY) >= first_date]
@@ -84,10 +92,12 @@ plot(
 )
 dev.off()
 
+## --- Barplots
+
 log_rets <- diff(log(data), lag = 1)
 log_rets <- log_rets[-1]
 
-library(lubridate)
+
 log_rets <- cbind(log_rets, month = month(index(log_rets)))
 
 aggregate_month <- function(symbol, log_rets) {
@@ -159,9 +169,6 @@ mygroupbarplots <- function(col, log_rets) {
   data <- data[order(month), ]
   data <- t(data)
 
-  library(RColorBrewer)
-  library(gplots)
-
   if (col == "Mean") {
     sds <- as.data.frame(
       aggregate(log_rets[, symbols],
@@ -207,14 +214,85 @@ mygroupbarplots("Median", log_rets)
 mygroupbarplots("Mean", log_rets)
 dev.off()
 
-
 par(opar)
 
+## --- Histograms
+
+symbols <- c("SPY", "EEM", "IWM")
+colors <- brewer.pal(length(symbols), "Set1")
+
+png(file = "./images/plot8.png", width = 1000)
+
+par(mfrow = c(1, 3))
+for (i in seq_along(symbols)) {
+  symbol <- symbols[i]
+  rets <- log_rets[, symbol]
+  dist <- density(rets)
+  hist(rets,
+       freq = FALSE,
+       col = colors[i],
+       xlab = "Returns",
+       main = symbol,
+       ylim = c(0, max(dist$y)))
+  rug(jitter(rets))
+  lines(dist, col = "blue")
+
+  xfit <- seq(min(rets), max(rets), length = 500)
+  yfit <- dnorm(xfit, mean = mean(rets), sd = sd(rets))
+  lines(xfit, yfit, col = "red", lwd = 2)
+  legend("topright", c("Normal", "KDE"), fill = c("red", "blue"))
+}
+
+dev.off()
+
+log_rets <- as.data.frame(log_rets)
+log_rets$month <- factor(log_rets$month)
+log_ann_rets <- as.data.frame(log_rets)
+
+log_ann_rets$SPY <- log_rets$SPY * 252
+log_ann_rets$EEM <- log_rets$EEM * 252
+log_ann_rets$IWM <- log_rets$IWM * 252
 
 
+par(mfrow = c(1, 1))
+data.melt <- melt(log_rets, id = c("month"))
+names(data.melt) <- c("month", "symbol", "ret")
+sm.options(ngrid = 1000)
 
+png(file = "./images/plot9.png", width = 1000)
+sm.density.compare(data.melt$ret, data.melt$symbol)
+title(main = "Return Distribution by Symbol")
+legend("topright", levels(data.melt$variable), fill = c(2:(1 + length(levels(data.melt$variable)))))
+dev.off()
 
+png(file = "./images/plot10.png", width = 1000)
+boxplot(ret ~ symbol,
+        data = data.melt,
+        varwidth = TRUE,
+        col = colors,
+        ylab = "Return",
+        main = "Returns",
+        notch = TRUE)
+dev.off()
 
-sds <- sds[order(sds$month),]
-barplot2(t(sds$sd))
-t(sds$sd)
+png(file = "./images/plot11.png", width = 1000)
+boxplot(ret ~ symbol,
+  data = data.melt,
+  varwidth = TRUE,
+  col = colors,
+  ylab = "Return",
+  main = "Returns",
+  outline = FALSE,
+  notch = TRUE
+)
+dev.off()
+
+png(file = "./images/plot12.png", width = 1000)
+vioplot(data.melt$ret[data.melt$symbol == "SPY"],
+  data.melt$ret[data.melt$symbol == "EEM"],
+  data.melt$ret[data.melt$symbol == "IWM"],
+  names = symbols,
+  col = colors
+  )
+title("Returns", ylab = "Return")
+dev.off()
