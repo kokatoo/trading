@@ -1,89 +1,356 @@
 #+STARTUP: showeverything
 
-* SPY
+* Exploratory Analysis
 
 ** Getting Data
 
 #+begin_src R
-getSymbols(Symbols = "SPY", src = "yahoo")
+data.all.SPY <- readRDS("./data/spy.rds")
+data.all.EEM <- readRDS("./data/eem.rds")
+data.all.IWM <- readRDS("./data/iwm.rds")
 
-data.SPY <- SPY
-saveRDS(data.SPY, file = "./data/spy.rds")
+> summary(data.all.SPY)
+     Index                 Open            High             Low        
+ Min.   :1995-01-03   Min.   : 45.7   Min.   : 45.84   Min.   : 45.69  
+ 1st Qu.:2001-05-23   1st Qu.:108.4   1st Qu.:109.40   1st Qu.:107.50  
+ Median :2007-10-24   Median :129.7   Median :130.50   Median :128.82  
+ Mean   :2007-10-24   Mean   :148.0   Mean   :148.94   Mean   :147.06  
+ 3rd Qu.:2014-03-24   3rd Qu.:185.7   3rd Qu.:187.04   3rd Qu.:184.57  
+ Max.   :2020-08-19   Max.   :339.1   Max.   :339.61   Max.   :337.48  
+     Close            Volume             Adjusted     
+ Min.   : 45.78   Min.   :     9500   Min.   : 28.71  
+ 1st Qu.:108.50   1st Qu.: 12734300   1st Qu.: 76.69  
+ Median :129.66   Median : 64220600   Median : 96.41  
+ Mean   :148.05   Mean   : 91105209   Mean   :122.96  
+ 3rd Qu.:185.78   3rd Qu.:129301350   3rd Qu.:164.52  
+ Max.   :338.64   Max.   :871026300   Max.   :338.64  
 
-> summary(data.SPY)
-     Index               SPY.Open         SPY.High        SPY.Low     
- Min.   :2007-01-03   Min.   : 67.95   Min.   : 70.0   Min.   : 67.1  
- 1st Qu.:2010-06-01   1st Qu.:131.79   1st Qu.:132.7   1st Qu.:131.0  
- Median :2013-10-25   Median :174.91   Median :175.8   Median :174.1  
- Mean   :2013-10-26   Mean   :184.89   Mean   :185.9   Mean   :183.7  
- 3rd Qu.:2017-03-24   3rd Qu.:235.73   3rd Qu.:236.7   3rd Qu.:234.5  
- Max.   :2020-08-20   Max.   :339.05   Max.   :339.6   Max.   :337.5  
-   SPY.Close        SPY.Volume         SPY.Adjusted   
- Min.   : 68.11   Min.   : 20270000   Min.   : 53.95  
- 1st Qu.:131.86   1st Qu.: 79695000   1st Qu.:106.91  
- Median :175.15   Median :121911000   Median :153.26  
- Mean   :184.91   Mean   :150092428   Mean   :166.23  
- 3rd Qu.:235.54   3rd Qu.:188239600   3rd Qu.:221.16  
- Max.   :338.64   Max.   :871026300   Max.   :338.64
+> summary(data.all.EEM)
+     Index                 Open            High            Low       
+ Min.   :2003-04-14   Min.   :11.14   Min.   :11.22   Min.   :11.14  
+ 1st Qu.:2007-08-15   1st Qu.:32.79   1st Qu.:33.05   1st Qu.:32.49  
+ Median :2011-12-13   Median :39.77   Median :40.01   Median :39.48  
+ Mean   :2011-12-16   Mean   :36.92   Mean   :37.18   Mean   :36.63  
+ 3rd Qu.:2016-04-19   3rd Qu.:43.09   3rd Qu.:43.32   3rd Qu.:42.86  
+ Max.   :2020-08-19   Max.   :55.23   Max.   :55.83   Max.   :54.94  
+     Close           Volume             Adjusted     
+ Min.   :11.22   Min.   :     9000   Min.   : 8.217  
+ 1st Qu.:32.79   1st Qu.: 28926200   1st Qu.:26.581  
+ Median :39.76   Median : 49745300   Median :33.949  
+ Mean   :36.92   Mean   : 50855134   Mean   :31.433  
+ 3rd Qu.:43.13   3rd Qu.: 69344000   3rd Qu.:37.797  
+ Max.   :55.73   Max.   :248682100   Max.   :49.247  
+
+> summary(data.all.IWM)
+     Index                 Open             High             Low        
+ Min.   :2000-05-26   Min.   : 32.53   Min.   : 33.54   Min.   : 32.30  
+ 1st Qu.:2005-06-21   1st Qu.: 57.65   1st Qu.: 58.21   1st Qu.: 57.06  
+ Median :2010-07-12   Median : 77.15   Median : 77.82   Median : 76.29  
+ Mean   :2010-07-10   Mean   : 87.84   Mean   : 88.50   Mean   : 87.07  
+ 3rd Qu.:2015-07-30   3rd Qu.:116.48   3rd Qu.:117.12   3rd Qu.:115.58  
+ Max.   :2020-08-19   Max.   :172.79   Max.   :173.39   Max.   :171.95  
+     Close            Volume             Adjusted     
+ Min.   : 32.55   Min.   :     1200   Min.   : 25.63  
+ 1st Qu.: 57.70   1st Qu.: 15085150   1st Qu.: 46.90  
+ Median : 77.06   Median : 29832750   Median : 65.02  
+ Mean   : 87.82   Mean   : 36565098   Mean   : 79.09  
+ 3rd Qu.:116.53   3rd Qu.: 50784300   3rd Qu.:108.15  
+ Max.   :173.02   Max.   :355117000   Max.   :168.48  
 #+end_src
 
-** Cleaning
+** Price Series Plot
+
+*** All Data Points
 
 #+begin_src R
-clean_data <- function(data) {
-
-  header  <- names(data)
-
-  colnames(data) <- sapply(strsplit(header, ".", fixed = TRUE), "[", 2)
-
-  return(data)
+price_plot <- function(symbol, data, col = "black") {
+  plot(
+    data,
+    xlab = "Date",
+    ylab = "Price",
+    col = col,
+    main = paste(
+      symbol,
+      " Price"
+    )
+  )
 }
 
-data.SPY <- clean_data(SPY)
-data.EEM <- clean_data(EEM)
-data.IWM <- clean_data(IWM)
-#+end_src
-
-** Exploratory Plot
-
-#+begin_src R
+par(oma = c(oma = c(1, 1, 2, 1)))
 layout(matrix(c(1, 1, 2, 3), 2, 2, byrow = TRUE))
-myplot("SPY", data.SPY)
-myplot("EEM", data.EEM)
-myplot("IWM", data.IWM
+price_plot("SPY", data.all.SPY$Adjusted, col = colors[1])
+price_plot("EEM", data.all.EEM$Adjusted, col = colors[2])
+price_plot("IWM", data.all.IWM$Adjusted, col = colors[3])
+mtext("All Data Points", outer = TRUE)
 #+end_src
 
 [[./images/plot1.png]]
 
-[[./images/plot2.png]]
+*** Only Common Points
+
+#+begin_src R
+first_date <- as.Date(
+  max(
+    sapply(
+      list(data.SPY, data.EEM, data.IWM),
+      function(x) index(first(x))
+    )
+  )
+)
+
+data.SPY <- data.all.SPY[index(data.all.SPY) >= first_date]
+data.EEM <- data.all.EEM[index(data.all.EEM) >= first_date]
+data.IWM <- data.all.IWM[index(data.all.IWM) >= first_date]
+
+par(mfrow = c(3, 1))
+price_plot("SPY", data.SPY$Adjusted, col = colors[1])
+price_plot("EEM", data.EEM$Adjusted, col = colors[2])
+price_plot("IWM", data.IWM$Adjusted, col = colors[3])
+#+end_src
 
 [[./images/plot2.png]]
 
-*** In 1 plot
+*** Normalized first price to 1
+
+#+begin_src R
+data.normalized <- cbind(
+  data.SPY$Adjusted / as.numeric(data.SPY$Adjusted[1]),
+  data.EEM$Adjusted / as.numeric(data.EEM$Adjusted[1]),
+  data.IWM$Adjusted / as.numeric(data.IWM$Adjusted[1])
+)
+names(data.normalized) <- symbols
+
+plot(
+  data.normalized,
+  col = colors,
+  main = "SPY vs EEM vs IWM",
+  legend.loc = "topleft"
+)
+#+end_src
 
 [[./images/plot3.png]]
 
-*** BarPlots
+** 5 Figure Summary + Mean BarPlot
 
+#+begin_src R
+log_rets <- diff(log(data.normalized), lag = 1)
+log_rets <- log_rets[-1]
+months <- month(log_rets, label = TRUE, abbr = TRUE)
+
+log_rets <- as.data.frame(log_rets)
+log_rets$Month <- months
+
+summary_rets <- aggregate(
+  log_rets[symbols] * 252,
+  by = list(log_rets$Month),
+  FUN = summary
+)
+names(summary_rets)[1] <- "Month"
+
+summary_sds <- aggregate(
+  log_rets[symbols] * 252,
+  by = list(log_rets$Month),
+  FUN = sd
+)
+names(summary_sds)[1] <- "Month"
+
+subs <- paste(
+  row.names(first(log_rets)),
+  "/",
+  row.names(last(log_rets))
+)
+#+end_src
+
+#+begin_src R
+summary_plot <- function(symbol, summary_rets, col, subs) {
+  header <- c("Min.", "Max.", "Median", "Mean")
+  data <- data.frame(Month = summary_rets$Month, summary_rets[, symbol])
+
+  par(mfrow = c(2, 2))
+  par(oma = c(oma = c(1, 1, 2, 1)))
+  for (col_name in header) {
+    barplot(
+      data[, col_name] * 100,
+      ylab = paste(col_name, "Returns (%)"),
+      yaxt = "n",
+      col = col,
+      main = col_name
+    )
+    axis(
+      side = 2,
+      at = axTicks(2),
+      labels = formatC(axTicks(2), format = "d", big.mark = ",")
+    )
+  }
+  mtext(paste(symbol, "Annual Return (%)"),
+    outer = TRUE,
+    font = 2,
+    cex = 1.3
+  )
+  mtext(
+    subs,
+    side = 1,
+    outer = TRUE,
+    cex = 0.8
+  )
+}
+
+summary_plot("SPY", summary_rets, colors[1], subs)
+summary_plot("EEM", summary_rets, colors[2], subs)
+summary_plot("IWM", summary_rets, colors[3], subs)
+#+end_src
 [[./images/plot4.png]]
 
 [[./images/plot5.png]]
 
+
 [[./images/plot6.png]]
 
+*** Group BarPlot
+
+#+begin_src R
+summary_grp_plot <- function(summary_rets, summary_sds, symbols, colors, subs) {
+
+  header <- c("Min.", "Max.", "Median", "Mean")
+
+  par(mfrow = c(2, 2))
+  par(oma = c(oma = c(2, 1, 2, 1)))
+
+  for (col_name in header) {
+    data <- sapply(symbols, function(symbol) {
+      summary_rets[, symbol][, col_name] * 100
+    })
+    data <- t(data)
+
+    if (col_name == "Mean") {
+      sds <- summary_sds[, symbol]
+    } else {
+      sds <- matrix(0, nrow = nrow(data), ncol = ncol(data))
+    }
+
+    barplot2(
+      data,
+      col = colors,
+      beside = TRUE,
+      legend = symbols,
+      names.arg = month.abb,
+      yaxt = "n",
+      ylab = paste(col_name, "Returns (%)"),
+      main = col_name,
+      plot.ci = TRUE,
+      ci.l = (data - 1.96 * sds),
+      ci.u = (data + 1.96 * sds)
+    )
+
+    axis(
+      side = 2,
+      at = axTicks(2),
+      labels = formatC(axTicks(2), format = "d", big.mark = ",")
+    )
+  }
+  mtext(
+    paste(paste(symbols, collapse = ", "), "Annual Return (%)"),
+    outer = TRUE,
+    font = 2,
+    cex = 1.3
+  )
+
+  mtext(
+    subs,
+    side = 1,
+    outer = TRUE,
+    cex = 0.8
+  )
+}
+
+summary_grp_plot(summary_rets, summary_sds, symbols, colors, subs)
+#+end_src
 
 [[./images/plot7.png]]
 
 ** Histograms
 
+#+begin_src R
+par(mfrow = c(1, 3))
+for (i in seq_along(symbols)) {
+  symbol <- symbols[i]
+  rets <- log_rets[, symbol]
+  dist <- density(rets)
+  hist(rets,
+       freq = FALSE,
+       col = colors[i],
+       xlab = "Returns",
+       main = symbol,
+       ylim = c(0, max(dist$y)))
+  rug(jitter(rets))
+  lines(dist, col = "blue")
+
+  xfit <- seq(min(rets), max(rets), length = 500)
+  yfit <- dnorm(xfit, mean = mean(rets), sd = sd(rets))
+  lines(xfit, yfit, col = "red", lwd = 2)
+  legend("topright", c("Normal", "KDE"), fill = c("red", "blue"))
+}
+#+end_src
+
 [[./images/plot8.png]]
 
-** KDE
+** SM Plot
+
+#+begin_src R
+log_rets <- as.data.frame(log_rets)
+log_rets$month <- factor(log_rets$month)
+
+par(mfrow = c(1, 1))
+data.melt <- melt(log_rets, id = c("month"))
+names(data.melt) <- c("month", "symbol", "ret")
+sm.options(ngrid = 1000)
+
+sm.density.compare(data.melt$ret, data.melt$symbol)
+title(main = "Return Distribution by Symbol")
+legend("topright", levels(data.melt$variable), fill = c(2:(1 + length(levels(data.melt$variable)))))
+#+end_src
 
 [[./images/plot9.png]]
 
-[[./images/plot10.png]]
+** Box Plots
+
+#+begin_src R
+boxplot(ret ~ symbol,
+        data = data.melt,
+        varwidth = TRUE,
+        col = colors,
+        ylab = "Return",
+        main = "Returns",
+        notch = TRUE)
+#+end_src
+
+[[./images/plot10.png]]v
+
+*** No Outliers
+
+#+begin_src R
+boxplot(ret ~ symbol,
+  data = data.melt,
+  varwidth = TRUE,
+  col = colors,
+  ylab = "Return",
+  main = "Returns",
+  outline = FALSE,
+  notch = TRUE
+)
+#+end_src
 
 [[./images/plot11.png]]
+
+** Violin Plot
+
+#+begin_src R
+vioplot(data.melt$ret[data.melt$symbol == "SPY"],
+  data.melt$ret[data.melt$symbol == "EEM"],
+  data.melt$ret[data.melt$symbol == "IWM"],
+  names = symbols,
+  col = colors
+)
+#+end_src
 
 [[./images/plot12.png]]
